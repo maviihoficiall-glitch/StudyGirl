@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Girl</title>
+
+<!-- Fontes -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display&display=swap" rel="stylesheet">
+
+<style>
+/* ===== ESTILO GERAL ===== */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #f5efe6;
+    color: #5a4634;
+    transition: 0.3s;
+}
+
+.dark {
+    background: #2b2b2b;
+    color: #eee;
+}
+
+h1, h2 {
+    font-family: 'Playfair Display', serif;
+}
+
+/* ===== LAYOUT ===== */
+.container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.col {
+    flex: 1;
+    padding: 20px;
+    min-width: 300px;
+}
+
+/* ===== CARD ===== */
+.card {
+    background: #fff;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.dark .card {
+    background: #3a3a3a;
+}
+
+/* ===== BOTÕES ===== */
+button {
+    background: #d8c3a5;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+button:hover {
+    background: #c5a880;
+}
+
+/* ===== INPUT ===== */
+input, textarea {
+    width: 100%;
+    padding: 8px;
+    border-radius: 10px;
+    border: none;
+    margin-top: 5px;
+    background: #f0e6d6;
+}
+
+/* ===== RESPONSIVO ===== */
+@media(max-width: 800px){
+    .container {
+        flex-direction: column;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- ===== COLUNA ESQUERDA ===== -->
+<div class="col">
+
+<h1>Study Girl 🌸</h1>
+
+<div class="card">
+<button onclick="toggleDark()">🌙 Modo Night</button>
+</div>
+
+<!-- LOGIN -->
+<div class="card">
+<h2>Login 👤</h2>
+<input id="nome" placeholder="Nome">
+<input id="email" placeholder="Email">
+<input id="senha" type="password" placeholder="Senha">
+<button onclick="salvarLogin()">Entrar</button>
+<p id="boasVindas"></p>
+</div>
+
+<!-- POMODORO -->
+<div class="card">
+<h2>Pomodoro ⏱️</h2>
+<p id="pomodoro">25:00</p>
+<button onclick="startPomodoro()">Iniciar</button>
+</div>
+
+<!-- LEITURA -->
+<div class="card">
+<h2>Leitura 📖</h2>
+<p id="leitura">0s</p>
+<button onclick="startLeitura()">Iniciar</button>
+<button onclick="stopLeitura()">Parar</button>
+</div>
+
+<!-- METAS -->
+<div class="card">
+<h2>Metas 🎯</h2>
+<textarea id="metas"></textarea>
+</div>
+
+<!-- SEMANA -->
+<div class="card">
+<h2>Planejamento 📅</h2>
+<textarea id="semana"></textarea>
+</div>
+
+</div>
+
+<!-- ===== COLUNA DIREITA ===== -->
+<div class="col">
+
+<!-- DATA -->
+<div class="card">
+<h2>Hoje 📅</h2>
+<p id="data"></p>
+</div>
+
+<!-- HORAS -->
+<div class="card">
+<h2>Horas estudadas 📊</h2>
+
+<button onclick="addHoras('humanas')">+ Humanas</button>
+<button onclick="addHoras('natureza')">+ Natureza</button>
+<button onclick="addHoras('matematica')">+ Matemática</button>
+<button onclick="addHoras('linguagens')">+ Linguagens</button>
+<button onclick="addHoras('redacao')">+ Redação</button>
+
+<p id="totalHoras"></p>
+<p id="ranking"></p>
+</div>
+
+<!-- GRAFICO -->
+<div class="card">
+<h2>Distribuição 🍕</h2>
+<canvas id="grafico"></canvas>
+</div>
+
+</div>
+
+</div>
+
+<script>
+/* ===== DARK MODE ===== */
+function toggleDark(){
+    document.body.classList.toggle("dark");
+}
+
+/* ===== LOGIN ===== */
+function salvarLogin(){
+    let nome = document.getElementById("nome").value;
+    let email = document.getElementById("email").value;
+    let senha = document.getElementById("senha").value;
+
+    localStorage.setItem("nome", nome);
+    localStorage.setItem("email", email);
+    localStorage.setItem("senha", senha);
+
+    document.getElementById("boasVindas").innerText = "Bem-vinda, " + nome + " 💕";
+}
+
+/* ===== CARREGAR LOGIN ===== */
+window.onload = function(){
+    let nome = localStorage.getItem("nome");
+    if(nome){
+        document.getElementById("boasVindas").innerText = "Bem-vinda, " + nome + " 💕";
+    }
+
+    document.getElementById("metas").value = localStorage.getItem("metas") || "";
+    document.getElementById("semana").value = localStorage.getItem("semana") || "";
+
+    atualizarData();
+    atualizarHoras();
+}
+
+/* ===== SALVAR AUTOMÁTICO ===== */
+document.getElementById("metas").oninput = () => {
+    localStorage.setItem("metas", metas.value);
+}
+
+document.getElementById("semana").oninput = () => {
+    localStorage.setItem("semana", semana.value);
+}
+
+/* ===== DATA ===== */
+function atualizarData(){
+    let hoje = new Date();
+    document.getElementById("data").innerText = hoje.toLocaleDateString();
+}
+
+/* ===== POMODORO ===== */
+function startPomodoro(){
+    let tempo = 1500;
+    let intervalo = setInterval(() => {
+        tempo--;
+        let min = Math.floor(tempo/60);
+        let seg = tempo%60;
+        document.getElementById("pomodoro").innerText = min + ":" + seg;
+
+        if(tempo % 300 === 0){
+            notify("Continue estudando 📚");
+        }
+
+        if(tempo <= 0){
+            clearInterval(intervalo);
+            notify("Hora de descansar 💤");
+        }
+    },1000);
+}
+
+/* ===== LEITURA ===== */
+let leituraInterval;
+let tempoLeitura = 0;
+
+function startLeitura(){
+    leituraInterval = setInterval(()=>{
+        tempoLeitura++;
+        document.getElementById("leitura").innerText = tempoLeitura + "s";
+    },1000);
+}
+
+function stopLeitura(){
+    clearInterval(leituraInterval);
+}
+
+/* ===== NOTIFICAÇÃO ===== */
+function notify(msg){
+    if(Notification.permission === "granted"){
+        new Notification(msg);
+    } else {
+        Notification.requestPermission();
+    }
+}
+
+/* ===== HORAS ===== */
+let horas = JSON.parse(localStorage.getItem("horas")) || {
+    humanas:0, natureza:0, matematica:0, linguagens:0, redacao:0
+};
+
+function addHoras(tipo){
+    horas[tipo]++;
+    localStorage.setItem("horas", JSON.stringify(horas));
+    atualizarHoras();
+}
+
+/* ===== ATUALIZAR ===== */
+function atualizarHoras(){
+    let total = Object.values(horas).reduce((a,b)=>a+b,0);
+    document.getElementById("totalHoras").innerText = "Total: " + total + "h";
+
+    let rank = "";
+    if(total <=4) rank="Iniciante";
+    else if(total <=9) rank="Focada";
+    else if(total <=19) rank="Dedicada";
+    else rank="Monstra";
+
+    document.getElementById("ranking").innerText = "🏆 " + rank;
+
+    desenharGrafico();
+}
+
+/* ===== GRAFICO ===== */
+function desenharGrafico(){
+    let canvas = document.getElementById("grafico");
+    let ctx = canvas.getContext("2d");
+
+    let total = Object.values(horas).reduce((a,b)=>a+b,0);
+
+    let cores = ["#f4c2c2","#c2d4f4","#c2f4d4","#f4e2c2","#e2c2f4"];
+    let i=0;
+    let start=0;
+
+    ctx.clearRect(0,0,300,300);
+
+    for(let tipo in horas){
+        let val = horas[tipo];
+        let fatia = (val/total) * Math.PI*2;
+
+        ctx.beginPath();
+        ctx.moveTo(150,150);
+        ctx.arc(150,150,100,start,start+fatia);
+        ctx.fillStyle = cores[i++];
+        ctx.fill();
+        start += fatia;
+    }
+}
+</script>
+
+</body>
+</html>
